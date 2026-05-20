@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Solid white background to ensure no transparency gaps -->
+    <item>
+        <color android:color="#FFFFFF" />
+    </item>
+
+    <!-- Scale the logo to 125% to "cut" or hide the excessive outer white borders -->
+    <item>
+        <scale
+            android:drawable="@drawable/logo"
+            android:scaleGravity="center"
+            android:scaleHeight="125%"
+            android:scaleWidth="125%"
+            android:gravity="center" />
+    </item>
+</layer-list>

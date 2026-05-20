@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!--
+      Adaptive icons use a 108dp x 108dp canvas.
+      Setting the logo to 85dp (smaller than the canvas)
+      to reduce the zoom and provide more "breathing room"
+      so it doesn't look cut off on the home screen.
+    -->
+    <item
+        android:drawable="@drawable/logo"
+        android:width="85dp"
+        android:height="85dp"
+        android:gravity="center" />
+</layer-list>
