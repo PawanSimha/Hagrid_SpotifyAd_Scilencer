@@ -31,9 +31,11 @@ import android.os.Build
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.util.Log
+import androidx.core.content.ContextCompat
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
@@ -89,21 +91,14 @@ class NotificationMuterService : NotificationListenerService() {
         private val _totalAdsMuted = MutableStateFlow(0)
         val totalAdsMuted: StateFlow<Int> = _totalAdsMuted
 
-        // Tracking for charts (0-6 for Mon-Sun, 0-23 for hours)
-        private val _dailyMutes = MutableStateFlow(FloatArray(7) { 0f })
+        private val _dailyMutes = MutableStateFlow(FloatArray(7))
         val dailyMutes: StateFlow<FloatArray> = _dailyMutes
 
-        private val _hourlyMutes = MutableStateFlow(FloatArray(24) { 0f })
+        private val _hourlyMutes = MutableStateFlow(FloatArray(24))
         val hourlyMutes: StateFlow<FloatArray> = _hourlyMutes
-
-        private val _totalSecondsSaved = MutableStateFlow(0L)
-        val totalSecondsSaved: StateFlow<Long> = _totalSecondsSaved
 
         private val _isEngineRunning = MutableStateFlow(false)
         val isEngineRunning: StateFlow<Boolean> = _isEngineRunning
-
-        private val _recentMuteTitle = MutableStateFlow("None")
-        val recentMuteTitle: StateFlow<String> = _recentMuteTitle
 
         fun setEngineState(enabled: Boolean) {
             _isEngineRunning.value = enabled
@@ -119,14 +114,13 @@ class NotificationMuterService : NotificationListenerService() {
             _sessionLogs.value = current
         }
 
-        private fun updateStats(title: String) {
+        private fun updateStats() {
             _totalAdsMuted.value += 1
-            _recentMuteTitle.value = title
             
             // Update daily data (adjusting for Mon-Sun index)
-            val calendar = java.util.Calendar.getInstance()
-            val dayOfWeek = (calendar.get(java.util.Calendar.DAY_OF_WEEK) + 5) % 7 // Mon=0, Tue=1...
-            val hourOfDay = calendar.get(java.util.Calendar.HOUR_OF_DAY)
+            val calendar = Calendar.getInstance()
+            val dayOfWeek = (calendar.get(Calendar.DAY_OF_WEEK) + 5) % 7 // Mon=0, Tue=1...
+            val hourOfDay = calendar.get(Calendar.HOUR_OF_DAY)
             
             val daily = _dailyMutes.value.copyOf()
             daily[dayOfWeek] += 1f
@@ -140,18 +134,20 @@ class NotificationMuterService : NotificationListenerService() {
 
     override fun onCreate() {
         super.onCreate()
-        audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        audioManager = getSystemService(AUDIO_SERVICE) as AudioManager
         _isServiceActive.value = true
         
         val filter = IntentFilter().apply {
             addAction(ACTION_SIMULATE_AD)
             addAction(ACTION_SIMULATE_TRACK)
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            registerReceiver(simulationReceiver, filter, RECEIVER_NOT_EXPORTED)
-        } else {
-            registerReceiver(simulationReceiver, filter)
-        }
+        
+        ContextCompat.registerReceiver(
+            this,
+            simulationReceiver,
+            filter,
+            ContextCompat.RECEIVER_NOT_EXPORTED
+        )
     }
 
     /**
@@ -255,7 +251,7 @@ class NotificationMuterService : NotificationListenerService() {
             audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, 0, 0)
             
             isCurrentlyMutedByUs = true
-            updateStats(title)
+            updateStats()
             addLog("MUTED: $title")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to apply mute", e)

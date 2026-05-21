@@ -39,7 +39,7 @@ Hagrid! requires two critical permissions to function correctly in the backgroun
 1.  **Notification Access**: Required for the `NotificationListenerService` to read media metadata (Title, Artist, Duration) from apps like Spotify and YouTube.
 2.  **Battery Optimization Bypass**: Required to prevent Android's "Doze Mode" from killing the background service during long music sessions.
 
-The app provides a guided setup on the main dashboard to help users enable these safely.
+The app provides a mandatory setup screen upon first launch to help users enable these safely.
 
 ---
 

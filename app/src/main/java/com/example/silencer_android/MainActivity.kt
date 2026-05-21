@@ -35,10 +35,10 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -50,21 +50,23 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.edit
+import androidx.core.net.toUri
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.semantics
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.example.silencer_android.ui.theme.*
 import kotlinx.coroutines.delay
 
 class MainActivity : ComponentActivity() {
-    private val prefs by lazy { getSharedPreferences("hagrid_prefs", Context.MODE_PRIVATE) }
+    private val prefs by lazy { getSharedPreferences("hagrid_prefs", MODE_PRIVATE) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -106,7 +108,7 @@ class MainActivity : ComponentActivity() {
                                 isDarkTheme = isDarkTheme,
                                 onToggleTheme = { 
                                     isDarkTheme = !isDarkTheme
-                                    prefs.edit().putBoolean("is_dark_theme", isDarkTheme).apply()
+                                    prefs.edit { putBoolean("is_dark_theme", isDarkTheme) }
                                 }
                             )
                         }
@@ -123,7 +125,7 @@ class MainActivity : ComponentActivity() {
 
     private fun requestIgnoreBatteryOptimizations() {
         val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
-            data = Uri.parse("package:$packageName")
+            data = "package:$packageName".toUri()
         }
         startActivity(intent)
     }
@@ -564,7 +566,7 @@ fun AdsMutedTodayCard(count: Int) {
             Spacer(modifier = Modifier.height(8.dp))
             Surface(color = GoogleGreen.copy(alpha = 0.1f), shape = RoundedCornerShape(50)) {
                 Row(modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.TrendingUp, contentDescription = null, tint = GoogleGreen, modifier = Modifier.size(16.dp))
+                    Icon(Icons.AutoMirrored.Filled.TrendingUp, contentDescription = null, tint = GoogleGreen, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(6.dp))
                     Text("Real-time tracking", fontSize = 12.sp, color = GoogleGreen, fontWeight = FontWeight.Bold)
                 }
@@ -665,40 +667,6 @@ fun HistoricalSummaryCard(totalMutes: Int, isActive: Boolean) {
 }
 
 @Composable
-fun DeveloperContactCard() {
-    val context = LocalContext.current
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = White),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-    ) {
-        Column(modifier = Modifier.padding(12.dp)) {
-            Text("Build on May 2026 by", fontWeight = FontWeight.Bold, fontSize = 11.sp, color = Color.Gray)
-            Spacer(modifier = Modifier.height(4.dp))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text("Pawan Simha R", fontWeight = FontWeight.Black, fontSize = 16.sp, color = Color.Black)
-                    Text("iampawansimha.2004@gmail.com", fontSize = 11.sp, color = Color.DarkGray)
-                }
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    IconButton(onClick = { openUrl(context, "https://www.linkedin.com/in/pawansimha") }) {
-                        Box(modifier = Modifier.size(24.dp).background(GoogleBlue, CircleShape), contentAlignment = Alignment.Center) {
-                            Text("in", color = White, fontWeight = FontWeight.Bold, fontSize = 10.sp)
-                        }
-                    }
-                    IconButton(onClick = { openUrl(context, "https://github.com/PawanSimha") }) {
-                        Box(modifier = Modifier.size(24.dp).background(Color.Black, CircleShape), contentAlignment = Alignment.Center) {
-                            Text("git", color = White, fontWeight = FontWeight.Bold, fontSize = 8.sp)
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
 fun PermissionGuard(content: @Composable () -> Unit) {
     val context = LocalContext.current
     var hasNotificationAccess by remember { mutableStateOf(isNotificationServiceEnabled(context)) }
@@ -728,7 +696,7 @@ fun PermissionGuard(content: @Composable () -> Unit) {
             },
             onIgnoreBattery = {
                 val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
-                    data = Uri.parse("package:${context.packageName}")
+                    data = "package:${context.packageName}".toUri()
                 }
                 context.startActivity(intent)
             }
