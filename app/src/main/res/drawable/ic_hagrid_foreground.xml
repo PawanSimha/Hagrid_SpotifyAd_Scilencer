@@ -1,14 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Solid white background to match Gmail/Maps style -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@android:color/white" />
+        </shape>
+    </item>
+
     <!--
       Adaptive icons use a 108dp x 108dp canvas.
-      Setting the logo to 85dp (smaller than the canvas)
-      to reduce the zoom and provide more "breathing room"
-      so it doesn't look cut off on the home screen.
+      We scale the logo down slightly (to 80dp) to provide some
+      padding and prevent it from appearing too zoomed in.
     -->
     <item
         android:drawable="@drawable/logo"
-        android:width="85dp"
-        android:height="85dp"
+        android:width="80dp"
+        android:height="80dp"
         android:gravity="center" />
 </layer-list>
+
