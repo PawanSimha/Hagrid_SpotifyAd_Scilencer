@@ -75,3 +75,6 @@ Users of free-tier media streaming services are frequently interrupted by loud, 
 - **Battery Efficiency**: Background service must consume < 1% total battery per 24 hours.
 - **Accuracy Rate**: > 98% detection rate for supported streaming platforms.
 - **System Stability**: 99.9% uptime for the `START_STICKY` service layer.
+
+---
+*Build on May 2026 by Pawan Simha R*

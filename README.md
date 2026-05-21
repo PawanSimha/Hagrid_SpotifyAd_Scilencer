@@ -98,7 +98,7 @@ Open the **Settings Icon** (Top-right) -> **Developer Sandbox** -> Tap **Simulat
 
 ## 👨‍💻 Developer & Compliance
 
-**Developed by Pawan Simha R**
+**Build on May 2026 by Pawan Simha R**
 
 [![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/PawanSimha)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/pawansimha)

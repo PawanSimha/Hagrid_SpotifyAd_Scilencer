@@ -173,7 +173,7 @@ fun SplashScreen() {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                "Developed by",
+                "Build on May 2026 by",
                 fontSize = 12.sp,
                 color = Color.Gray,
                 fontWeight = FontWeight.Medium
@@ -414,7 +414,7 @@ fun DeveloperSandboxSheet(
             shape = RoundedCornerShape(20.dp)
         ) {
             Column(modifier = Modifier.padding(20.dp)) {
-                Text("Lead Developer", fontSize = 12.sp, color = Color.Gray, fontWeight = FontWeight.Bold)
+                Text("Build on May 2026 by", fontSize = 12.sp, color = Color.Gray, fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.height(12.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(modifier = Modifier.weight(1f)) {
@@ -650,7 +650,7 @@ fun DeveloperContactCard() {
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
-            Text("Developer", fontWeight = FontWeight.Bold, fontSize = 11.sp, color = Color.Gray)
+            Text("Build on May 2026 by", fontWeight = FontWeight.Bold, fontSize = 11.sp, color = Color.Gray)
             Spacer(modifier = Modifier.height(4.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(modifier = Modifier.weight(1f)) {

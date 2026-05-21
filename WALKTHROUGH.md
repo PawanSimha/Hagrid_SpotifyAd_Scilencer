@@ -62,4 +62,4 @@ This project is licensed under the **GNU General Public License v3.0**.
 
 ---
 
-*Developed by Pawan Simha R*
+*Build on May 2026 by Pawan Simha R*
