@@ -1,6 +1,5 @@
 <div align="center">
-  <img src="app/src/main/res/drawable/logo.png" width="64" height="64" alt="Hagrid Logo" />
-  <h3>Hagrid!</h3>
+  <img src="app/src/main/res/drawable/logo.png" width="120" height="120" alt="Hagrid Logo" />
 
   <h1>Hagrid! - Universal Ad Silencer</h1>
 
