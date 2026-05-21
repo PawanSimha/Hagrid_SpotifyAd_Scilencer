@@ -97,17 +97,19 @@ class MainActivity : ComponentActivity() {
                         enter = fadeIn(animationSpec = tween(500)),
                         exit = fadeOut()
                     ) {
-                        MainScreen(
-                            onGrantPermission = { openNotificationSettings() },
-                            onIgnoreBatteryOptimizations = { requestIgnoreBatteryOptimizations() },
-                            onSimulateAd = { sendSimulationBroadcast(NotificationMuterService.ACTION_SIMULATE_AD) },
-                            onSimulateTrack = { sendSimulationBroadcast(NotificationMuterService.ACTION_SIMULATE_TRACK) },
-                            isDarkTheme = isDarkTheme,
-                            onToggleTheme = { 
-                                isDarkTheme = !isDarkTheme
-                                prefs.edit().putBoolean("is_dark_theme", isDarkTheme).apply()
-                            }
-                        )
+                        PermissionGuard {
+                            MainScreen(
+                                onGrantPermission = { openNotificationSettings() },
+                                onIgnoreBatteryOptimizations = { requestIgnoreBatteryOptimizations() },
+                                onSimulateAd = { sendSimulationBroadcast(NotificationMuterService.ACTION_SIMULATE_AD) },
+                                onSimulateTrack = { sendSimulationBroadcast(NotificationMuterService.ACTION_SIMULATE_TRACK) },
+                                isDarkTheme = isDarkTheme,
+                                onToggleTheme = { 
+                                    isDarkTheme = !isDarkTheme
+                                    prefs.edit().putBoolean("is_dark_theme", isDarkTheme).apply()
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -690,6 +692,169 @@ fun DeveloperContactCard() {
                             Text("git", color = White, fontWeight = FontWeight.Bold, fontSize = 8.sp)
                         }
                     }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun PermissionGuard(content: @Composable () -> Unit) {
+    val context = LocalContext.current
+    var hasNotificationAccess by remember { mutableStateOf(isNotificationServiceEnabled(context)) }
+    var isIgnoringBattery by remember { mutableStateOf(isIgnoringBatteryOptimizations(context)) }
+    
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                hasNotificationAccess = isNotificationServiceEnabled(context)
+                isIgnoringBattery = isIgnoringBatteryOptimizations(context)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
+    if (hasNotificationAccess && isIgnoringBattery) {
+        content()
+    } else {
+        SetupScreen(
+            hasNotificationAccess = hasNotificationAccess,
+            isIgnoringBattery = isIgnoringBattery,
+            onGrantNotification = {
+                val intent = Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)
+                context.startActivity(intent)
+            },
+            onIgnoreBattery = {
+                val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                    data = Uri.parse("package:${context.packageName}")
+                }
+                context.startActivity(intent)
+            }
+        )
+    }
+}
+
+@Composable
+fun SetupScreen(
+    hasNotificationAccess: Boolean,
+    isIgnoringBattery: Boolean,
+    onGrantNotification: () -> Unit,
+    onIgnoreBattery: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.logo),
+            contentDescription = null,
+            modifier = Modifier.size(100.dp).clip(CircleShape)
+        )
+        
+        Spacer(modifier = Modifier.height(32.dp))
+        
+        Text(
+            "Setup Required",
+            fontSize = 28.sp,
+            fontWeight = FontWeight.Black,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        
+        Text(
+            "Hagrid! needs these permissions to run invisibly in the background and mute ads effectively.",
+            textAlign = TextAlign.Center,
+            color = Color.Gray,
+            modifier = Modifier.padding(vertical = 12.dp)
+        )
+        
+        Spacer(modifier = Modifier.height(32.dp))
+        
+        PermissionItem(
+            title = "Notification Access",
+            description = "Needed to detect when an ad starts playing.",
+            isGranted = hasNotificationAccess,
+            onClick = onGrantNotification
+        )
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        PermissionItem(
+            title = "Battery Optimization",
+            description = "Needed to keep the service alive in the background.",
+            isGranted = isIgnoringBattery,
+            onClick = onIgnoreBattery
+        )
+        
+        Spacer(modifier = Modifier.height(48.dp))
+        
+        if (hasNotificationAccess && isIgnoringBattery) {
+            Button(
+                onClick = { /* Will be handled by PermissionGuard state change */ },
+                modifier = Modifier.fillMaxWidth().height(56.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = GoogleGreen),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Text("GET STARTED", fontWeight = FontWeight.Bold)
+            }
+        } else {
+            Text(
+                "Please enable both permissions to continue",
+                fontSize = 12.sp,
+                color = GoogleRed,
+                fontWeight = FontWeight.Bold
+            )
+        }
+    }
+}
+
+@Composable
+fun PermissionItem(
+    title: String,
+    description: String,
+    isGranted: Boolean,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isGranted) GoogleGreen.copy(alpha = 0.1f) else MaterialTheme.colorScheme.surfaceVariant
+        ),
+        shape = RoundedCornerShape(16.dp),
+        border = if (isGranted) BorderStroke(1.dp, GoogleGreen) else null
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .background(if (isGranted) GoogleGreen else Color.Gray, CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = if (isGranted) Icons.Default.Check else Icons.Default.Lock,
+                    contentDescription = null,
+                    tint = Color.White
+                )
+            }
+            
+            Spacer(modifier = Modifier.width(16.dp))
+            
+            Column(modifier = Modifier.weight(1f)) {
+                Text(title, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                Text(description, fontSize = 12.sp, color = Color.Gray)
+            }
+            
+            if (!isGranted) {
+                TextButton(onClick = onClick) {
+                    Text("ALLOW", fontWeight = FontWeight.Black, color = GoogleBlue)
                 }
             }
         }
