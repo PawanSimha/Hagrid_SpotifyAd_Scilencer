@@ -40,15 +40,22 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import com.example.silencer_android.ui.theme.*
 import kotlinx.coroutines.delay
 
 class MainActivity : ComponentActivity() {
+    private val prefs by lazy { getSharedPreferences("hagrid_prefs", Context.MODE_PRIVATE) }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            var isDarkTheme by remember { mutableStateOf(false) }
+            val systemDark = isSystemInDarkTheme()
+            var isDarkTheme by remember { 
+                mutableStateOf(prefs.getBoolean("is_dark_theme", systemDark)) 
+            }
             
             HagridTheme(darkTheme = isDarkTheme) {
                 var showSplash by remember { mutableStateOf(true) }
@@ -78,7 +85,10 @@ class MainActivity : ComponentActivity() {
                             onSimulateAd = { sendSimulationBroadcast(NotificationMuterService.ACTION_SIMULATE_AD) },
                             onSimulateTrack = { sendSimulationBroadcast(NotificationMuterService.ACTION_SIMULATE_TRACK) },
                             isDarkTheme = isDarkTheme,
-                            onToggleTheme = { isDarkTheme = !isDarkTheme }
+                            onToggleTheme = { 
+                                isDarkTheme = !isDarkTheme
+                                prefs.edit().putBoolean("is_dark_theme", isDarkTheme).apply()
+                            }
                         )
                     }
                 }
@@ -129,7 +139,8 @@ fun SplashScreen() {
                 "Hagrid!",
                 fontWeight = FontWeight.Black,
                 fontSize = 32.sp,
-                color = Color.Black
+                color = Color.Black,
+                modifier = Modifier.semantics { heading() }
             )
             Text(
                 "Universal Ad Silencer",
@@ -223,8 +234,14 @@ fun MainScreen(
                             contentScale = ContentScale.Crop
                         )
                         Spacer(modifier = Modifier.width(12.dp))
-                        Column {
-                            Text("Hagrid!", fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface, fontSize = 18.sp)
+                        Column(verticalArrangement = Arrangement.spacedBy((-6).dp)) {
+                            Text(
+                                "Hagrid!", 
+                                fontWeight = FontWeight.Black, 
+                                color = MaterialTheme.colorScheme.onSurface, 
+                                fontSize = 18.sp,
+                                modifier = Modifier.semantics { heading() }
+                            )
                             Text("Universal Ad Silencer", fontSize = 10.sp, color = GoogleBlue, fontWeight = FontWeight.Bold)
                         }
                     }
@@ -640,8 +657,13 @@ fun DeveloperContactCard() {
 }
 
 fun openUrl(context: Context, url: String) {
-    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-    context.startActivity(intent)
+    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
+        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    }
+    try {
+        context.startActivity(intent)
+    } catch (_: Exception) {
+    }
 }
 
 fun isNotificationServiceEnabled(context: Context): Boolean {
