@@ -48,7 +48,9 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            HagridTheme {
+            var isDarkTheme by remember { mutableStateOf(false) }
+            
+            HagridTheme(darkTheme = isDarkTheme) {
                 var showSplash by remember { mutableStateOf(true) }
 
                 LaunchedEffect(Unit) {
@@ -56,7 +58,7 @@ class MainActivity : ComponentActivity() {
                     showSplash = false
                 }
 
-                Box(modifier = Modifier.fillMaxSize().background(White)) {
+                Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
                     AnimatedVisibility(
                         visible = showSplash,
                         enter = fadeIn(),
@@ -74,7 +76,9 @@ class MainActivity : ComponentActivity() {
                             onGrantPermission = { openNotificationSettings() },
                             onIgnoreBatteryOptimizations = { requestIgnoreBatteryOptimizations() },
                             onSimulateAd = { sendSimulationBroadcast(NotificationMuterService.ACTION_SIMULATE_AD) },
-                            onSimulateTrack = { sendSimulationBroadcast(NotificationMuterService.ACTION_SIMULATE_TRACK) }
+                            onSimulateTrack = { sendSimulationBroadcast(NotificationMuterService.ACTION_SIMULATE_TRACK) },
+                            isDarkTheme = isDarkTheme,
+                            onToggleTheme = { isDarkTheme = !isDarkTheme }
                         )
                     }
                 }
@@ -102,22 +106,56 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun SplashScreen() {
-    Column(
-        modifier = Modifier.fillMaxSize().background(White),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(White)
+            .padding(bottom = 48.dp),
+        contentAlignment = Alignment.Center
     ) {
-        Image(
-            painter = painterResource(id = R.drawable.logo),
-            contentDescription = "Hagrid Logo",
-            modifier = Modifier.size(120.dp).clip(CircleShape),
-            contentScale = ContentScale.Crop
-        )
-        Spacer(modifier = Modifier.height(24.dp))
-        Text("Hagrid!", fontWeight = FontWeight.Black, fontSize = 32.sp, color = Color.Black, letterSpacing = 2.sp)
-        Text("Universal Ad Silencer", fontSize = 14.sp, color = GoogleBlue, fontWeight = FontWeight.Bold)
-        Spacer(modifier = Modifier.height(48.dp))
-        CircularProgressIndicator(modifier = Modifier.size(32.dp), color = GoogleBlue, strokeWidth = 3.dp)
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.logo),
+                contentDescription = "Hagrid Logo",
+                modifier = Modifier
+                    .size(140.dp)
+                    .clip(CircleShape),
+                contentScale = ContentScale.Crop
+            )
+            Spacer(modifier = Modifier.height(24.dp))
+            Text(
+                "Hagrid!",
+                fontWeight = FontWeight.Black,
+                fontSize = 32.sp,
+                color = Color.Black
+            )
+            Text(
+                "Universal Ad Silencer",
+                fontSize = 14.sp,
+                color = GoogleBlue,
+                fontWeight = FontWeight.Bold
+            )
+        }
+
+        Column(
+            modifier = Modifier.align(Alignment.BottomCenter),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                "Developed by",
+                fontSize = 12.sp,
+                color = Color.Gray,
+                fontWeight = FontWeight.Medium
+            )
+            Text(
+                "Pawan Simha R",
+                fontSize = 14.sp,
+                color = Color.Black,
+                fontWeight = FontWeight.Bold
+            )
+        }
     }
 }
 
@@ -127,17 +165,24 @@ fun MainScreen(
     onGrantPermission: () -> Unit,
     onIgnoreBatteryOptimizations: () -> Unit,
     onSimulateAd: () -> Unit,
-    onSimulateTrack: () -> Unit
+    onSimulateTrack: () -> Unit,
+    isDarkTheme: Boolean,
+    onToggleTheme: () -> Unit
 ) {
     val context = LocalContext.current
     val isRunning by NotificationMuterService.isServiceActive.collectAsState()
     val isEngineEnabled by NotificationMuterService.isEngineRunning.collectAsState()
     val adsMuted by NotificationMuterService.totalAdsMuted.collectAsState()
-    val recentMute by NotificationMuterService.recentMuteTitle.collectAsState()
+    val dailyMutes by NotificationMuterService.dailyMutes.collectAsState()
+    val hourlyMutes by NotificationMuterService.hourlyMutes.collectAsState()
     
     var hasPermission by remember { mutableStateOf(isNotificationServiceEnabled(context)) }
     var isIgnoringBatteryOptimizations by remember { mutableStateOf(isIgnoringBatteryOptimizations(context)) }
     val lifecycleOwner = LocalLifecycleOwner.current
+    
+    // Bottom Sheet state for Developer Sandbox
+    var showBottomSheet by remember { mutableStateOf(false) }
+    val sheetState = rememberModalBottomSheetState()
     
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -148,6 +193,22 @@ fun MainScreen(
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
+    if (showBottomSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showBottomSheet = false },
+            sheetState = sheetState,
+            containerColor = MaterialTheme.colorScheme.surface,
+            dragHandle = { BottomSheetDefaults.DragHandle() }
+        ) {
+            DeveloperSandboxSheet(
+                onSimulateAd = onSimulateAd,
+                onSimulateTrack = onSimulateTrack,
+                isDarkTheme = isDarkTheme,
+                onToggleTheme = onToggleTheme
+            )
+        }
     }
 
     Scaffold(
@@ -163,17 +224,26 @@ fun MainScreen(
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         Column {
-                            Text("Hagrid!", fontWeight = FontWeight.Black, color = Color.Black, fontSize = 18.sp)
+                            Text("Hagrid!", fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface, fontSize = 18.sp)
                             Text("Universal Ad Silencer", fontSize = 10.sp, color = GoogleBlue, fontWeight = FontWeight.Bold)
                         }
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = White),
+                actions = {
+                    IconButton(onClick = { showBottomSheet = true }) {
+                        Icon(
+                            imageVector = Icons.Default.Settings, 
+                            contentDescription = "Settings",
+                            tint = Color.Gray
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface),
                 modifier = Modifier.shadow(2.dp)
             )
         },
         bottomBar = {
-            Surface(color = White, modifier = Modifier.fillMaxWidth().shadow(4.dp)) {
+            Surface(color = MaterialTheme.colorScheme.surface, modifier = Modifier.fillMaxWidth().shadow(4.dp)) {
                 Text(
                     "Monitoring Spotify • YT Music • YouTube",
                     modifier = Modifier.padding(12.dp).fillMaxWidth(),
@@ -184,7 +254,7 @@ fun MainScreen(
                 )
             }
         },
-        containerColor = Color(0xFFF8F9FA)
+        containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         Column(
             modifier = Modifier
@@ -196,13 +266,34 @@ fun MainScreen(
         ) {
             // Horizontal Info Row
             Row(
-                modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                InfoMiniCard("Status", if(isRunning) "Online" else "Disconnected", Icons.Default.CloudQueue, GoogleBlue)
-                InfoMiniCard("Recent Mute", recentMute, Icons.Default.VolumeOff, Color(0xFF9C27B0))
-                InfoMiniCard("Monitoring", if(isEngineEnabled) "Active" else "Paused", Icons.Default.FlashOn, Color(0xFFFF9800))
-                InfoMiniCard("Engine", if(isRunning) "Scanning" else "Idle", Icons.Default.Security, GoogleGreen)
+                val monitoringStatus = when {
+                    !isRunning -> "Offline"
+                    !isEngineEnabled -> "Paused"
+                    else -> "Active"
+                }
+                val engineStatus = when {
+                    !isRunning -> "Inactive"
+                    !isEngineEnabled -> "Idle"
+                    else -> "Scanning"
+                }
+                
+                InfoMiniCard(
+                    label = "Monitoring",
+                    value = monitoringStatus,
+                    icon = Icons.Default.FlashOn,
+                    color = if (isEngineEnabled && isRunning) Color(0xFFFF9800) else Color.Gray,
+                    modifier = Modifier.weight(1f)
+                )
+                InfoMiniCard(
+                    label = "Engine",
+                    value = engineStatus,
+                    icon = Icons.Default.Security,
+                    color = if (isEngineEnabled && isRunning) GoogleGreen else Color.Gray,
+                    modifier = Modifier.weight(1f)
+                )
             }
 
             // Engine Toggle
@@ -229,7 +320,7 @@ fun MainScreen(
                     colors = ButtonDefaults.buttonColors(containerColor = GoogleRed),
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text("Enable Notification Access", fontWeight = FontWeight.Bold)
+                    Text("Enable Notification Access", fontWeight = FontWeight.Bold, color = Color.White)
                 }
             }
 
@@ -249,41 +340,137 @@ fun MainScreen(
 
             // Charts Row
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                ChartCard("Mutes per Day", Modifier.weight(1f), isBar = true)
-                ChartCard("Hourly Activity", Modifier.weight(1f), isBar = false)
+                ChartCard("Mutes per Day", Modifier.weight(1f), isBar = true, data = dailyMutes)
+                ChartCard("Hourly Activity", Modifier.weight(1f), isBar = false, data = hourlyMutes)
             }
 
             // Historical Summary
             HistoricalSummaryCard(totalMutes = adsMuted, isActive = isEngineEnabled)
-
-            DeveloperContactCard()
-
-            // Dev Testing Tools
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = White),
-                shape = RoundedCornerShape(16.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-            ) {
-                Row(modifier = Modifier.padding(8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text("Dev Mode:", fontWeight = FontWeight.Bold, fontSize = 10.sp, color = Color.Gray, modifier = Modifier.padding(start = 4.dp))
-                    Button(onClick = onSimulateAd, modifier = Modifier.weight(1f).height(32.dp), colors = ButtonDefaults.buttonColors(containerColor = GoogleYellow), shape = RoundedCornerShape(6.dp), contentPadding = PaddingValues(0.dp)) {
-                        Text("Sim Ad", color = Color.Black, fontSize = 10.sp)
-                    }
-                    Button(onClick = onSimulateTrack, modifier = Modifier.weight(1f).height(32.dp), colors = ButtonDefaults.buttonColors(containerColor = GoogleBlue), shape = RoundedCornerShape(6.dp), contentPadding = PaddingValues(0.dp)) {
-                        Text("Sim Track", fontSize = 10.sp)
-                    }
-                }
-            }
         }
     }
 }
 
 @Composable
-fun InfoMiniCard(label: String, value: String, icon: ImageVector, color: Color) {
+fun DeveloperSandboxSheet(
+    onSimulateAd: () -> Unit,
+    onSimulateTrack: () -> Unit,
+    isDarkTheme: Boolean,
+    onToggleTheme: () -> Unit
+) {
+    val context = LocalContext.current
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(24.dp)
+            .padding(bottom = 32.dp)
+    ) {
+        Text(
+            "Developer Sandbox",
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        
+        Spacer(modifier = Modifier.height(24.dp))
+        
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+            shape = RoundedCornerShape(20.dp)
+        ) {
+            Column(modifier = Modifier.padding(20.dp)) {
+                Text("Lead Developer", fontSize = 12.sp, color = Color.Gray, fontWeight = FontWeight.Bold)
+                Spacer(modifier = Modifier.height(12.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("Pawan Simha R", fontWeight = FontWeight.Black, fontSize = 18.sp, color = MaterialTheme.colorScheme.onSurface)
+                        Text("iampawansimha.2004@gmail.com", fontSize = 12.sp, color = Color.Gray)
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        SocialIcon("x", Color.Black) { openUrl(context, "https://x.com/pawansimha") }
+                        SocialIcon("in", GoogleBlue) { openUrl(context, "https://www.linkedin.com/in/pawansimha") }
+                        SocialIcon("git", Color.Black) { openUrl(context, "https://github.com/PawanSimha") }
+                    }
+                }
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(32.dp))
+        
+        Text("Testing Tools", fontSize = 14.sp, color = Color.Gray, fontWeight = FontWeight.Bold)
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Button(
+                onClick = onSimulateAd,
+                modifier = Modifier.weight(1f).height(52.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = GoogleYellow),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text("Simulate Ad", color = Color.Black, fontWeight = FontWeight.Bold)
+            }
+            Button(
+                onClick = onSimulateTrack,
+                modifier = Modifier.weight(1f).height(52.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = GoogleBlue),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text("Simulate Track", color = Color.White, fontWeight = FontWeight.Bold)
+            }
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = if (isDarkTheme) Icons.Default.DarkMode else Icons.Default.LightMode,
+                    contentDescription = null,
+                    tint = if (isDarkTheme) GoogleBlue else GoogleYellow,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = if (isDarkTheme) "Dark Mode" else "Light Mode",
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+            Switch(
+                checked = isDarkTheme,
+                onCheckedChange = { onToggleTheme() },
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = GoogleBlue,
+                    checkedTrackColor = GoogleBlue.copy(alpha = 0.5f)
+                )
+            )
+        }
+    }
+}
+
+@Composable
+fun SocialIcon(label: String, color: Color, onClick: () -> Unit) {
+    Surface(
+        onClick = onClick,
+        modifier = Modifier.size(32.dp),
+        shape = CircleShape,
+        color = color
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Text(label, color = White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+        }
+    }
+}
+
+@Composable
+fun InfoMiniCard(label: String, value: String, icon: ImageVector, color: Color, modifier: Modifier = Modifier) {
     Card(
-        modifier = Modifier.width(150.dp),
-        colors = CardDefaults.cardColors(containerColor = White),
+        modifier = modifier,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
@@ -294,7 +481,7 @@ fun InfoMiniCard(label: String, value: String, icon: ImageVector, color: Color) 
             Spacer(modifier = Modifier.width(10.dp))
             Column {
                 Text(label, fontSize = 10.sp, color = Color.Gray, fontWeight = FontWeight.Medium)
-                Text(value, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.Black, maxLines = 1)
+                Text(value, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface, maxLines = 1)
             }
         }
     }
@@ -307,7 +494,7 @@ fun AdsMutedTodayCard(count: Int) {
     
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
@@ -333,38 +520,50 @@ fun AdsMutedTodayCard(count: Int) {
                 progress = { progress },
                 modifier = Modifier.fillMaxWidth().height(8.dp).clip(CircleShape),
                 color = GoogleBlue,
-                trackColor = Color(0xFFF1F3F4)
+                trackColor = MaterialTheme.colorScheme.surfaceVariant
             )
         }
     }
 }
 
 @Composable
-fun ChartCard(title: String, modifier: Modifier = Modifier, isBar: Boolean) {
+fun ChartCard(title: String, modifier: Modifier = Modifier, isBar: Boolean, data: FloatArray) {
+    val maxValue = data.maxOrNull()?.takeIf { it > 0 } ?: 1f
+    
     Card(
         modifier = modifier.height(220.dp),
-        colors = CardDefaults.cardColors(containerColor = White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(title, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+            Text(title, fontSize = 15.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
             Text(if(isBar) "Real data from your connected devices this week." else "Service engagement patterns from all logs.", fontSize = 10.sp, color = Color.Gray)
             Spacer(modifier = Modifier.height(16.dp))
             Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.BottomCenter) {
                 if (isBar) {
                     Row(modifier = Modifier.fillMaxSize().padding(horizontal = 4.dp), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.Bottom) {
-                        listOf(0.4f, 0.2f, 0.6f, 0.3f, 0.8f, 0.5f, 0.7f).forEach { h ->
-                            Box(modifier = Modifier.width(10.dp).fillMaxHeight(h).background(GoogleBlue.copy(alpha = 0.6f), RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)))
+                        data.forEach { count ->
+                            val heightFactor = (count / maxValue).coerceIn(0.05f, 1f)
+                            Box(modifier = Modifier.width(10.dp).fillMaxHeight(heightFactor).background(GoogleBlue.copy(alpha = 0.6f), RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)))
                         }
                     }
                 } else {
                     Canvas(modifier = Modifier.fillMaxSize()) {
-                        val path = androidx.compose.ui.graphics.Path()
-                        path.moveTo(0f, size.height * 0.9f)
-                        path.quadraticTo(size.width * 0.25f, size.height * 0.8f, size.width * 0.5f, size.height * 0.9f)
-                        path.quadraticTo(size.width * 0.75f, size.height * 1.0f, size.width, size.height * 0.5f)
-                        drawPath(path, color = GoogleBlue, style = androidx.compose.ui.graphics.drawscope.Stroke(width = 6f))
+                        if (data.any { it > 0 }) {
+                            val path = androidx.compose.ui.graphics.Path()
+                            val stepX = size.width / (data.size - 1)
+                            
+                            data.forEachIndexed { index, count ->
+                                val x = index * stepX
+                                val y = size.height - (count / maxValue * size.height)
+                                if (index == 0) path.moveTo(x, y) else path.lineTo(x, y)
+                            }
+                            drawPath(path, color = GoogleBlue, style = androidx.compose.ui.graphics.drawscope.Stroke(width = 6f))
+                        } else {
+                            // Show a flat line if no data
+                            drawLine(color = GoogleBlue.copy(alpha = 0.3f), start = androidx.compose.ui.geometry.Offset(0f, size.height), end = androidx.compose.ui.geometry.Offset(size.width, size.height), strokeWidth = 4f)
+                        }
                     }
                 }
             }
@@ -383,12 +582,12 @@ fun ChartCard(title: String, modifier: Modifier = Modifier, isBar: Boolean) {
 fun HistoricalSummaryCard(totalMutes: Int, isActive: Boolean) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text("Historical Summary", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            Text("Historical Summary", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
             Text("Real performance metrics from your local database.", fontSize = 10.sp, color = Color.Gray)
             Spacer(modifier = Modifier.height(24.dp))
             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -396,7 +595,7 @@ fun HistoricalSummaryCard(totalMutes: Int, isActive: Boolean) {
                     Text("$totalMutes", fontSize = 28.sp, fontWeight = FontWeight.Black, color = GoogleBlue)
                     Text("TOTAL MUTES LOGGED", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.Gray)
                 }
-                Box(modifier = Modifier.width(1.dp).height(48.dp).background(Color(0xFFF1F3F4)))
+                Box(modifier = Modifier.width(1.dp).height(48.dp).background(MaterialTheme.colorScheme.surfaceVariant))
                 Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(if(isActive) "Active" else "Inactive", fontSize = 28.sp, fontWeight = FontWeight.Black, color = if(isActive) GoogleGreen else GoogleRed)
                     Text("SYSTEM STATUS", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.Gray)

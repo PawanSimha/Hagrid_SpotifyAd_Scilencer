@@ -71,6 +71,13 @@ class NotificationMuterService : NotificationListenerService() {
         private val _totalAdsMuted = MutableStateFlow(0)
         val totalAdsMuted: StateFlow<Int> = _totalAdsMuted
 
+        // Tracking for charts (0-6 for Mon-Sun, 0-23 for hours)
+        private val _dailyMutes = MutableStateFlow(FloatArray(7) { 0f })
+        val dailyMutes: StateFlow<FloatArray> = _dailyMutes
+
+        private val _hourlyMutes = MutableStateFlow(FloatArray(24) { 0f })
+        val hourlyMutes: StateFlow<FloatArray> = _hourlyMutes
+
         private val _totalSecondsSaved = MutableStateFlow(0L)
         val totalSecondsSaved: StateFlow<Long> = _totalSecondsSaved
 
@@ -92,6 +99,24 @@ class NotificationMuterService : NotificationListenerService() {
             current.add(0, entry)
             if (current.size > 20) current.removeAt(current.size - 1)
             _sessionLogs.value = current
+        }
+
+        private fun updateStats(title: String) {
+            _totalAdsMuted.value += 1
+            _recentMuteTitle.value = title
+            
+            // Update daily data (adjusting for Mon-Sun index)
+            val calendar = java.util.Calendar.getInstance()
+            val dayOfWeek = (calendar.get(java.util.Calendar.DAY_OF_WEEK) + 5) % 7 // Mon=0, Tue=1...
+            val hourOfDay = calendar.get(java.util.Calendar.HOUR_OF_DAY)
+            
+            val daily = _dailyMutes.value.copyOf()
+            daily[dayOfWeek] += 1f
+            _dailyMutes.value = daily
+            
+            val hourly = _hourlyMutes.value.copyOf()
+            hourly[hourOfDay] += 1f
+            _hourlyMutes.value = hourly
         }
     }
 
@@ -207,8 +232,7 @@ class NotificationMuterService : NotificationListenerService() {
             audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, 0, 0)
             
             isCurrentlyMutedByUs = true
-            _totalAdsMuted.value += 1
-            _recentMuteTitle.value = title
+            updateStats(title)
             addLog("MUTED: $title")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to apply mute", e)
