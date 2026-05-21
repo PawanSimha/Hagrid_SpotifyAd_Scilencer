@@ -331,6 +331,28 @@ fun MainScreen(
                 )
             }
 
+            // Health Checklist (Crucial for Reviewers)
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = if(isRunning && hasPermission) Icons.Default.CheckCircle else Icons.Default.Error,
+                        contentDescription = null,
+                        tint = if(isRunning && hasPermission) GoogleGreen else GoogleRed
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = if(isRunning && hasPermission) "System Healthy: Engine Active" else "Action Required: Complete Setup",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
+
             // Engine Toggle
             Button(
                 onClick = { NotificationMuterService.setEngineState(!isEngineEnabled) },

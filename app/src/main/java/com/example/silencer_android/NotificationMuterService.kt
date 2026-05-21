@@ -148,7 +148,7 @@ class NotificationMuterService : NotificationListenerService() {
             addAction(ACTION_SIMULATE_TRACK)
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            registerReceiver(simulationReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+            registerReceiver(simulationReceiver, filter, RECEIVER_NOT_EXPORTED)
         } else {
             registerReceiver(simulationReceiver, filter)
         }
@@ -169,7 +169,12 @@ class NotificationMuterService : NotificationListenerService() {
         if (!TARGET_PACKAGES.contains(pkg)) return
 
         val extras = sbn.notification.extras
-        val token = extras.getParcelable<MediaSession.Token>(Notification.EXTRA_MEDIA_SESSION) ?: return
+        val token = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            extras.getParcelable(Notification.EXTRA_MEDIA_SESSION, MediaSession.Token::class.java)
+        } else {
+            @Suppress("DEPRECATION")
+            extras.getParcelable(Notification.EXTRA_MEDIA_SESSION)
+        } ?: return
 
         // Register Dynamic Callback for this session if not already tracked
         if (!controllerMap.containsKey(pkg)) {
