@@ -32,3 +32,6 @@ Thumbs.db
 # Secrets
 google-services.json
 .idea/google-services.json
+
+# Firebase Configuration
+app/google-services.json
