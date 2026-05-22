@@ -47,6 +47,12 @@ Hagrid! is an ultra-lightweight, invisible background utility designed to reclai
 *   **Automated Triggers**: One-tap "Simulate Ad" and "Simulate Track" broadcasts to verify muting logic instantly.
 *   **Social Connectivity**: Professional quick-links for developer networking and repository contribution.
 
+### 📸 Visual Interface Preview
+<p align="center">
+  <img src="metadata/2.jpg" width="45%" alt="Hagrid Dashboard Idle State" />
+  <img src="metadata/3.jpg" width="45%" alt="Hagrid Dashboard Active Monitoring State" />
+</p>
+
 ---
 
 ## 💻 Tech Stack & Anatomy
