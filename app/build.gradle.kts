@@ -7,11 +7,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.silencer_android"
+    namespace = "com.pawansimha.hagrid"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.silencer_android"
+        applicationId = "com.pawansimha.hagrid"
         minSdk = 24
         targetSdk = 36
         versionCode = 1
@@ -22,7 +22,8 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

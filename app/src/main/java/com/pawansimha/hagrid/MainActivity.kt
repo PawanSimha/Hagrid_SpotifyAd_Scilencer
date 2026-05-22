@@ -16,7 +16,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.example.silencer_android
+package com.pawansimha.hagrid
 
 import android.content.ComponentName
 import android.content.Context
@@ -62,7 +62,7 @@ import androidx.core.net.toUri
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.example.silencer_android.ui.theme.*
+import com.pawansimha.hagrid.ui.theme.*
 import kotlinx.coroutines.delay
 
 class MainActivity : ComponentActivity() {
@@ -141,7 +141,7 @@ fun SplashScreen() {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(White)
+            .background(MaterialTheme.colorScheme.background)
             .padding(bottom = 48.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -161,7 +161,7 @@ fun SplashScreen() {
                 "Hagrid!",
                 fontWeight = FontWeight.Black,
                 fontSize = 32.sp,
-                color = Color.Black,
+                color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier.semantics { heading() }
             )
             Text(
@@ -185,7 +185,7 @@ fun SplashScreen() {
             Text(
                 "Pawan Simha R",
                 fontSize = 14.sp,
-                color = Color.Black,
+                color = MaterialTheme.colorScheme.onBackground,
                 fontWeight = FontWeight.Bold
             )
         }
@@ -448,7 +448,7 @@ fun DeveloperSandboxSheet(
                         Text("iampawansimha.2004@gmail.com", fontSize = 12.sp, color = Color.Gray)
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        SocialIcon("x", Color.Black) { openUrl(context, "https://x.com/pawansimha") }
+                        SocialIcon("X", Color.Black) { openUrl(context, "https://x.com/iampawansimha") }
                         SocialIcon("in", GoogleBlue) { openUrl(context, "https://www.linkedin.com/in/pawansimha") }
                         SocialIcon("git", Color.Black) { openUrl(context, "https://github.com/PawanSimha") }
                     }
@@ -630,7 +630,7 @@ fun ChartCard(title: String, modifier: Modifier = Modifier, isBar: Boolean, data
             }
             Spacer(modifier = Modifier.height(8.dp))
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                val labels = if(isBar) listOf("Tue", "Wed", "Thu", "Fri", "Sat", "Sun", "Mon") else listOf("8:00", "12:00", "18:00", "22:00")
+                val labels = if(isBar) listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun") else listOf("8:00", "12:00", "18:00", "22:00")
                 labels.forEach { label ->
                     Text(label, fontSize = 9.sp, color = Color.LightGray)
                 }

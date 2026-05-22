@@ -65,7 +65,7 @@ Hagrid! is an ultra-lightweight, invisible background utility designed to reclai
 SilencerAndroid/
 ├── app/
 │   ├── src/main/
-│   │   ├── java/com/example/silencer_android/
+│   │   ├── java/com/pawansimha/hagrid/
 │   │   │   ├── ui/theme/           # Glassmorphic Material 3 Theme & Colors
 │   │   │   ├── MainActivity.kt      # Compose UI Dashboard & Theme Logic
 │   │   │   └── NotificationMuterService.kt # Ad Detection & Suppression Engine
@@ -83,7 +83,7 @@ SilencerAndroid/
 
 ### 1. Build & Deploy
 1. Clone the repository into **Android Studio Ladybug** or newer.
-2. Synchronize Gradle and ensure you have **SDK 33+** installed.
+2. Synchronize Gradle and ensure you have **SDK 36** installed.
 3. Build the APK and deploy to a physical device (recommended) or Emulator.
 
 ### 2. Permissions Grant
@@ -102,7 +102,7 @@ Open the **Settings Icon** (Top-right) -> **Developer Sandbox** -> Tap **Simulat
 
 [![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/PawanSimha)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/pawansimha)
-[![Twitter](https://img.shields.io/badge/Twitter-1DA1F2?style=for-the-badge&logo=twitter&logoColor=white)](https://x.com/pawansimha)
+[![Twitter](https://img.shields.io/badge/Twitter-1DA1F2?style=for-the-badge&logo=twitter&logoColor=white)](https://x.com/iampawansimha)
 
 ### ⚖️ Licensing
 This repository is licensed under the **GNU General Public License v3.0**. All modifications and derivative works must remain open-source under the same terms. See the [LICENSE](LICENSE) file for the full legal text.

@@ -8,7 +8,7 @@ This guide will help you navigate the architecture, installation, and testing wo
 
 ### Prerequisites
 * Android Studio Ladybug (or newer)
-* Android SDK 33 (Android 13) up to SDK 35 (Android 15)
+* Android SDK 36 (Android 16 Preview)
 * A physical Android device or Emulator with Google Play Services (for testing media background states)
 
 ### Local Project Synchronization

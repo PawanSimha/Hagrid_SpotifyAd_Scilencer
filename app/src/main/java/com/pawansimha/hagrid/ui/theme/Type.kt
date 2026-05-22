@@ -1,4 +1,4 @@
-package com.example.silencer_android.ui.theme
+package com.pawansimha.hagrid.ui.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle

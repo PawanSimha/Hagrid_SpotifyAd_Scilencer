@@ -16,7 +16,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.example.silencer_android
+package com.pawansimha.hagrid
 
 import android.app.Notification
 import android.content.BroadcastReceiver
@@ -50,6 +50,8 @@ class NotificationMuterService : NotificationListenerService() {
     private var cachedVolume: Int = -1
     private var isCurrentlyMutedByUs: Boolean = false
     
+    private val prefs by lazy { getSharedPreferences("hagrid_stats", Context.MODE_PRIVATE) }
+    
     // Track active media controllers to prevent memory leaks and handle intra-session changes
     private val controllerMap = mutableMapOf<String, MediaControllerRecord>()
 
@@ -71,8 +73,8 @@ class NotificationMuterService : NotificationListenerService() {
         private const val TAG = "HagridEngine"
         private const val AD_DURATION_THRESHOLD_MS = 35000L // 35 seconds
 
-        const val ACTION_SIMULATE_AD = "com.example.silencer_android.SIMULATE_AD"
-        const val ACTION_SIMULATE_TRACK = "com.example.silencer_android.SIMULATE_TRACK"
+        const val ACTION_SIMULATE_AD = "com.pawansimha.hagrid.SIMULATE_AD"
+        const val ACTION_SIMULATE_TRACK = "com.pawansimha.hagrid.SIMULATE_TRACK"
 
         // Strict whitelist to prevent system-wide interference
         private val TARGET_PACKAGES = setOf(
@@ -105,6 +107,40 @@ class NotificationMuterService : NotificationListenerService() {
             addLog(if (enabled) "SYSTEM: Engine Started" else "SYSTEM: Engine Stopped")
         }
 
+        private fun saveStats(context: Context) {
+            val prefs = context.getSharedPreferences("hagrid_stats", Context.MODE_PRIVATE)
+            val dailyString = _dailyMutes.value.joinToString(",")
+            val hourlyString = _hourlyMutes.value.joinToString(",")
+            
+            prefs.edit().apply {
+                putInt("total_ads_muted", _totalAdsMuted.value)
+                putString("daily_mutes", dailyString)
+                putString("hourly_mutes", hourlyString)
+                apply()
+            }
+        }
+
+        fun loadStats(context: Context) {
+            val prefs = context.getSharedPreferences("hagrid_stats", Context.MODE_PRIVATE)
+            _totalAdsMuted.value = prefs.getInt("total_ads_muted", 0)
+            
+            val dailyString = prefs.getString("daily_mutes", null)
+            if (dailyString != null) {
+                try {
+                    val daily = dailyString.split(",").map { it.toFloat() }.toFloatArray()
+                    if (daily.size == 7) _dailyMutes.value = daily
+                } catch (e: Exception) { Log.e(TAG, "Failed to load daily stats", e) }
+            }
+
+            val hourlyString = prefs.getString("hourly_mutes", null)
+            if (hourlyString != null) {
+                try {
+                    val hourly = hourlyString.split(",").map { it.toFloat() }.toFloatArray()
+                    if (hourly.size == 24) _hourlyMutes.value = hourly
+                } catch (e: Exception) { Log.e(TAG, "Failed to load hourly stats", e) }
+            }
+        }
+
         fun addLog(message: String) {
             val time = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
             val entry = "[$time] $message"
@@ -114,7 +150,7 @@ class NotificationMuterService : NotificationListenerService() {
             _sessionLogs.value = current
         }
 
-        private fun updateStats() {
+        private fun updateStats(context: Context) {
             _totalAdsMuted.value += 1
             
             // Update daily data (adjusting for Mon-Sun index)
@@ -129,11 +165,14 @@ class NotificationMuterService : NotificationListenerService() {
             val hourly = _hourlyMutes.value.copyOf()
             hourly[hourOfDay] += 1f
             _hourlyMutes.value = hourly
+            
+            saveStats(context)
         }
     }
 
     override fun onCreate() {
         super.onCreate()
+        loadStats(this)
         audioManager = getSystemService(AUDIO_SERVICE) as AudioManager
         _isServiceActive.value = true
         
@@ -251,7 +290,7 @@ class NotificationMuterService : NotificationListenerService() {
             audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, 0, 0)
             
             isCurrentlyMutedByUs = true
-            updateStats()
+            updateStats(this)
             addLog("MUTED: $title")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to apply mute", e)
