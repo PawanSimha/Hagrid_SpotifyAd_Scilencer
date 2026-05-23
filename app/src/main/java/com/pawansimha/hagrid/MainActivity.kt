@@ -109,7 +109,8 @@ class MainActivity : ComponentActivity() {
                                 onToggleTheme = { 
                                     isDarkTheme = !isDarkTheme
                                     prefs.edit { putBoolean("is_dark_theme", isDarkTheme) }
-                                }
+                                },
+                                onNudgeService = { nudgeService() }
                             )
                         }
                     }
@@ -133,6 +134,21 @@ class MainActivity : ComponentActivity() {
     private fun sendSimulationBroadcast(action: String) {
         val intent = Intent(action).apply { setPackage(packageName) }
         sendBroadcast(intent)
+    }
+
+    private fun nudgeService() {
+        val componentName = ComponentName(this, NotificationMuterService::class.java)
+        packageManager.setComponentEnabledSetting(
+            componentName,
+            android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+            android.content.pm.PackageManager.DONT_KILL_APP
+        )
+        packageManager.setComponentEnabledSetting(
+            componentName,
+            android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+            android.content.pm.PackageManager.DONT_KILL_APP
+        )
+        android.widget.Toast.makeText(this, "Nudging service engine...", android.widget.Toast.LENGTH_SHORT).show()
     }
 }
 
@@ -200,7 +216,8 @@ fun MainScreen(
     onSimulateAd: () -> Unit,
     onSimulateTrack: () -> Unit,
     isDarkTheme: Boolean,
-    onToggleTheme: () -> Unit
+    onToggleTheme: () -> Unit,
+    onNudgeService: () -> Unit
 ) {
     val context = LocalContext.current
     val isRunning by NotificationMuterService.isServiceActive.collectAsState()
@@ -336,24 +353,48 @@ fun MainScreen(
             }
 
             // Health Checklist (Crucial for Reviewers)
+            val isHealthy = isRunning && hasPermission && isIgnoringBatteryOptimizations
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = if(isRunning && hasPermission) Icons.Default.CheckCircle else Icons.Default.Error,
-                        contentDescription = null,
-                        tint = if(isRunning && hasPermission) GoogleGreen else GoogleRed
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(
-                        text = if(isRunning && hasPermission) "System Healthy: Engine Active" else "Action Required: Complete Setup",
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+                Column(modifier = Modifier.padding(12.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = if(isHealthy) Icons.Default.CheckCircle else Icons.Default.Error,
+                            contentDescription = null,
+                            tint = if(isHealthy) GoogleGreen else GoogleRed
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = if(isHealthy) "System Healthy: Engine Active" else "Action Required: Setup Incomplete",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                    
+                    if (!isHealthy) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        if (!hasPermission) {
+                            Text("• Notification Access: Missing", fontSize = 11.sp, color = GoogleRed)
+                        } else if (!isRunning) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text("• Service Status: Offline (Waiting for system)", fontSize = 11.sp, color = GoogleRed)
+                                    Text("  Tip: Try toggling Notification Access OFF and ON in settings.", fontSize = 10.sp, color = Color.Gray)
+                                }
+                                TextButton(onClick = onNudgeService) {
+                                    Text("FIX NOW", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        }
+                        
+                        if (!isIgnoringBatteryOptimizations) {
+                            Text("• Battery Optimization: Enabled (Should be Disabled)", fontSize = 11.sp, color = GoogleRed)
+                        }
+                    }
                 }
             }
 
