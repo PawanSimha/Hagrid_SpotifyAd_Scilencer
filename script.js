@@ -75,10 +75,12 @@ function drawDemoWave() {
 }
 drawDemoWave();
 
-function setDemo(mode) {
+function setDemo(mode, btn) {
     demoActive = mode;
+    console.log('Demo mode changed to:', mode); // Debug log
     document.querySelectorAll('.demo-btn').forEach(b => b.classList.remove('active'));
-    event.target.classList.add('active');
+    if (btn) btn.classList.add('active');
+
     const dot = document.querySelector('.demo-status-dot');
     const label = document.getElementById('demoStatusText');
     const statuses = {
@@ -87,9 +89,15 @@ function setDemo(mode) {
         muting: ['muting', 'Muting via AudioManager'],
         resume: ['playing', 'Music resumed seamlessly']
     };
-    dot.className = 'demo-status-dot ' + statuses[mode][0];
-    label.textContent = statuses[mode][1];
+
+    if (dot && label) {
+        dot.className = 'demo-status-dot ' + statuses[mode][0];
+        label.textContent = statuses[mode][1];
+    }
 }
+
+// Ensure globally accessible
+window.setDemo = setDemo;
 
 // ── ENGINE TOGGLE ──
 let engineOn = true;
