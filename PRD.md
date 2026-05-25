@@ -1,6 +1,6 @@
 # Product Requirements Document (PRD)
 
-# Hagrid!: Universal Ad Silencer
+# Hagrid!: Universal Ad Silencer · v1.0.0 Stable
 
 ## 1. Executive Summary
 **Hagrid!** is an ultra-lightweight, system-level background utility for Android designed to automatically detect and silence audio advertisements across popular media streaming platforms like Spotify, YouTube Music, and Chrome. Unlike traditional ad-blockers, Hagrid! focuses specifically on the audio experience, performing surgical muting without modifying hardware volume or requiring root access.
@@ -77,4 +77,4 @@ Users of free-tier media streaming services are frequently interrupted by loud, 
 - **System Stability**: 99.9% uptime for the `START_STICKY` service layer.
 
 ---
-*Build on May 2026 by Pawan Simha R*
+*Build on May 2026 by Pawan Simha R · v1.0.0 Stable*

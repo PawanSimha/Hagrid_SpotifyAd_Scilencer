@@ -5,6 +5,10 @@
 *.iml
 .externalNativeBuild
 .cxx
+*.apk
+*.ap_
+*.dex
+.kotlin/
 
 # IDE - IntelliJ / Android Studio
 .idea/caches
@@ -15,12 +19,16 @@
 .idea/assetWizardSettings.xml
 .idea/deploymentTargetSelector.xml
 .idea/deviceManager.xml
+.idea/runConfigurations.xml
 *.iws
 *.ipr
 
 # Local configuration
 local.properties
 .idea/localBranches.xml
+
+# Distribution
+downloads/
 
 # Log files
 *.log

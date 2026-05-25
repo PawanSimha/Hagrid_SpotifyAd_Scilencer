@@ -13,7 +13,11 @@
   ![Kotlin](https://img.shields.io/badge/KOTLIN-2.0+-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white)
   ![Jetpack Compose](https://img.shields.io/badge/COMPOSE-UI-4285F4?style=for-the-badge&logo=jetpack-compose&logoColor=white)
   ![Material 3](https://img.shields.io/badge/MATERIAL-3-34A853?style=for-the-badge&logo=google&logoColor=white)
-  ![Status](https://img.shields.io/badge/STATUS-ACTIVE_DEVELOPMENT-orange?style=for-the-badge)
+  ![Status](https://img.shields.io/badge/STATUS-RELEASED_STABLE-22C55E?style=for-the-badge)
+
+  <br />
+
+  [**Download Latest APK · v1.0.0**](https://github.com/PawanSimha/Hagrid_SpotifyAd_Scilencer/releases/latest/download/Hagrid_v1.0.0.apk)
 
 </div>
 

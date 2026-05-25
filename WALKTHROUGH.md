@@ -1,4 +1,4 @@
-# Hagrid! Walkthrough Guide
+# Hagrid! Walkthrough Guide · v1.0.0 Stable
 
 This guide will help you navigate the architecture, installation, and testing workflows of the Hagrid! Universal Ad Silencer platform.
 
@@ -62,4 +62,4 @@ This project is licensed under the **GNU General Public License v3.0**.
 
 ---
 
-*Build on May 2026 by Pawan Simha R*
+*Build on May 2026 by Pawan Simha R · v1.0.0 Stable*
