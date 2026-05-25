@@ -114,6 +114,7 @@ Open the **Settings Icon** (Top-right) -> **Developer Sandbox** -> Tap **Simulat
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/pawansimha)
 [![Twitter](https://img.shields.io/badge/Twitter-1DA1F2?style=for-the-badge&logo=twitter&logoColor=white)](https://x.com/iampawansimha)
 [![Credly](https://img.shields.io/badge/Credly-FF6B6B?style=for-the-badge&logo=credly&logoColor=white)](https://www.credly.com/users/pawansimha/badges#credly)
+[![Google Skills](https://img.shields.io/badge/Google_Skills-4285F4?style=for-the-badge&logo=google&logoColor=white)](https://www.skills.google/public_profiles/9108dded-855b-466a-b261-0a7519d472cf)
 
 ### ⚖️ Licensing
 This repository is licensed under the **GNU General Public License v3.0**. All modifications and derivative works must remain open-source under the same terms. See the [LICENSE](LICENSE) file for the full legal text.
